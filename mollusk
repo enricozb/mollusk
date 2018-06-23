@@ -1,0 +1,52 @@
+#! /usr/bin/python3
+# TODO combine mollusk & mollusk-relay
+
+import builtins
+import xonsh
+import os
+import socket
+import time
+
+from multiprocessing import Pool as Pool
+# from multiprocessing.pool import ThreadPool as Pool
+from subprocess import run
+
+def create_socket():
+    sock = socket.socket()
+    sock.bind(('', 0))
+    sock.listen(1)
+    return sock
+
+def listen_for_cmd(sock):
+    try:
+        conn, addr = sock.accept()
+        cmd = conn.recv(1024).decode()
+        if cmd == "exit":
+            return True
+        builtins.__xonsh_shell__.default(cmd)
+        conn.close()
+    except Exception as e:
+        print(e)
+
+def run_fish(port):
+    return run('fish',
+            env={**os.environ,
+                "MOLLUSK": str(port)})
+
+def main():
+    xonsh.main.premain()
+    sock = create_socket()
+    while True:
+        proc = run_fish(sock.getsockname()[1])
+        rtn = proc.returncode
+
+        # TODO case where fish was not killed by mollusk
+        # TODO handle changing directories
+
+        # prepare for upcoming command
+        if listen_for_cmd(sock):
+            return
+
+if __name__ == "__main__":
+    main()
+

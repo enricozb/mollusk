@@ -1,0 +1,15 @@
+#! /usr/bin/python3
+
+import socket
+import sys
+
+def main():
+    _, cmd, port = sys.argv
+    sock = socket.socket()
+    sock.connect(('', int(port)))
+    sock.send(cmd.encode())
+    sock.close()
+
+if __name__ == "__main__":
+    main()
+
