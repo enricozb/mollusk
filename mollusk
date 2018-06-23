@@ -24,7 +24,8 @@ def listen_for_cmd(sock):
         cwd, cmd = pickle.loads(conn.recv(1024))
         if cmd == "exit":
             return True
-        builtins.__xonsh_shell__.default(f"cd {str(cwd)} and {cmd}")
+        os.chdir(cwd)
+        builtins.__xonsh_shell__.default(cmd)
         conn.close()
     except Exception as e:
         print(e)

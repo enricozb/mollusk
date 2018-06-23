@@ -25,3 +25,7 @@ every command, and yet is still faster than xonsh on its commands.
  - Fix end of file not terminating shell
  - Probably combine `mollusk` and `mollusk-relay`
 
+## Laments
+Sadly I can't change `$SHELL` to `/usr/bin/mollusk`. This is because `xonsh`
+is what is actually running the commands.
+
