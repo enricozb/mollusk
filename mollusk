@@ -8,8 +8,6 @@ import socket
 import time
 import xonsh
 
-from multiprocessing import Pool as Pool
-# from multiprocessing.pool import ThreadPool as Pool
 from subprocess import run
 
 def create_socket():

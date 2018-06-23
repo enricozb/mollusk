@@ -1,12 +1,12 @@
-if test -n "$MOLLUSK"
-  function mollusk
-    switch (commandline)
-      case ".." clear ls cd mv "ls *" "mv *" "cd *"
-        commandline -f execute
-      case "*"
-        mollusk-relay (commandline) "$MOLLUSK"
-        exit
+# mollusk
+function preexec_test --on-event fish_preexec
+    if test -n "$MOLLUSK"
+        switch $argv
+          case ".." clear ls cd mv "ls *" "mv *" "cd *"
+          case "*"
+            mollusk-relay $argv "$MOLLUSK"
+            exit
+        end
     end
-  end
 end
 

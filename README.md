@@ -24,12 +24,17 @@ command is run.
 
  3. Try it out, see it break.
 
-## TODO (in order of priorty)
- - Multi-line command support
+## TODO \[bugs\] (in order of priorty)
+ - ~~Multi-line command support~~
  - Robustness against breaking the internal xonsh interpreter
  - Fix end of file not terminating shell
  - Fix syntax highlighting
  - Probably combine `mollusk` and `mollusk-relay`
+
+## TODO \[features\] (in order of priorty)
+ - Have `~/.xonshrc`'s prompt be the one presented on the fish prompt.
+ - Ultimately never have to edit any fish configuration files, only `xonsh`
+   ones
 
 ## Laments
 Sadly I can't change `$SHELL` to `/usr/bin/mollusk`. This is because `xonsh`
