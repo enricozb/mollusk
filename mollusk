@@ -1,10 +1,12 @@
 #! /usr/bin/python3
 # TODO combine mollusk & mollusk-relay
 
+import argparse
 import builtins
 import os
 import pickle
 import socket
+import sys
 import time
 import xonsh
 
@@ -20,20 +22,27 @@ def listen_for_cmd(sock):
     try:
         conn, addr = sock.accept()
         cwd, cmd = pickle.loads(conn.recv(1024))
-        if cmd == "exit":
-            return True
         os.chdir(cwd)
         builtins.__xonsh_shell__.default(cmd)
         conn.close()
     except Exception as e:
         print(e)
+    return builtins.__xonsh_exit__
 
 def run_fish(port, cwd):
     return run(f'fish',
             cwd=os.getcwd(),
             env={**os.environ, "MOLLUSK": str(port)})
 
-def main():
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+            "-r", "--relay",
+            help="relay mode followed by a command and a port",
+            nargs=2)
+    return parser.parse_args()
+
+def shell_mode():
     xonsh.main.premain()
     sock = create_socket()
     while True:
@@ -41,10 +50,24 @@ def main():
         rtn = proc.returncode
 
         # TODO case where fish was not killed by mollusk
+        # for example, when EOF is passed to fish.
 
         # prepare for upcoming command
         if listen_for_cmd(sock):
             return
+
+def relay_mode(cmd, port):
+    sock = socket.socket()
+    sock.connect(('', int(port)))
+    sock.send(pickle.dumps((os.getcwd(), cmd)))
+    sock.close()
+
+def main():
+    args = parse_args()
+    if args.relay:
+        relay_mode(*args.relay)
+    else:
+        shell_mode()
 
 if __name__ == "__main__":
     main()
