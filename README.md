@@ -5,8 +5,10 @@ but `fish`'s autocomplete and suggestion system is way superior to `xonsh`'s.
 But I also love the fact that `xonsh` has its whole state as Python objects.
 So I decided to combine the two.
 
-This code is 100% garbage. It's very hacky, spawning a new fish shell for
-every command, and yet is still faster than xonsh on its commands.
+This code is 100% garbage. It's very hacky, a single python program manages
+an instance of `xonsh` and an instance of `fish`. On pressing `[ENTER]`, fish
+sends a message to the running `mollusk` instance over a socket, and `mollusk`
+runs that inside of its child `xonsh` process.
 
 I consider this an improvement on `xonsh`, but not an improvement on `fish`
 at the moment. Once the main bugs are fixed, I'll probably consider it an
@@ -18,18 +20,17 @@ command is run.
     in `~/.config/fish/`. Since configuration files are so complex, there is
     no way to do this automatically.
 
- 2. Put `mollusk` and `mollusk-relay` in `/usr/bin/` or somewhere in your path.
-    Make sure that `fish` can find `mollusk` and `mollusk-relay` wherever they
-    may be.
+ 2. Put `mollusk` in `/usr/bin/` or somewhere in your path.  Make sure that
+    `fish` can find `mollusk` wherever it may be.
 
  3. Try it out, see it break.
 
 ## TODO \[bugs\] (in order of priorty)
- - ~~Multi-line command support~~
+ - Multi-line command support
  - Robustness against breaking the internal xonsh interpreter
- - Fix end of file not terminating shell
+ - ~~Fix end of file not terminating shell~~
  - Fix syntax highlighting
- - Probably combine `mollusk` and `mollusk-relay`
+ - ~~Probably combine `mollusk` and `mollusk-relay`~~
 
 ## TODO \[features\] (in order of priorty)
  - Have `~/.xonshrc`'s prompt be the one presented on the fish prompt.

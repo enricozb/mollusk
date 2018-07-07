@@ -1,16 +1,21 @@
 #! /usr/bin/python3
-# TODO combine mollusk & mollusk-relay
 
 import argparse
 import builtins
 import os
 import pickle
+import signal
 import socket
+import subprocess
 import sys
-import time
 import xonsh
 
-from subprocess import run
+relay = "NORMAL"
+logging = False
+
+def print(x, *args):
+    if logging:
+        builtins.print(f"mollusk [{relay}]: {x}", *args)
 
 def create_socket():
     sock = socket.socket()
@@ -18,19 +23,31 @@ def create_socket():
     sock.listen(1)
     return sock
 
-def listen_for_cmd(sock):
+def listen_for_cmd(sock, fish_pid):
     try:
         conn, addr = sock.accept()
         cwd, cmd = pickle.loads(conn.recv(1024))
+        print(f"running {cmd}")
+        cmd = bytes(cmd, "utf-8").decode("unicode_escape")
+
+        print(f"stopping fish")
+        os.kill(fish_pid, signal.SIGSTOP)
         os.chdir(cwd)
+
+        # TODO multiline commands
         builtins.__xonsh_shell__.default(cmd)
+        print(f"resuming fish")
+        builtins.print()
+        os.kill(fish_pid, signal.SIGCONT)
         conn.close()
+
     except Exception as e:
         print(e)
+
     return builtins.__xonsh_exit__
 
 def run_fish(port, cwd):
-    return run(f'fish',
+    return subprocess.Popen(f'fish',
             cwd=os.getcwd(),
             env={**os.environ, "MOLLUSK": str(port)})
 
@@ -45,26 +62,29 @@ def parse_args():
 def shell_mode():
     xonsh.main.premain()
     sock = create_socket()
+    fish = run_fish(sock.getsockname()[1], os.getcwd())
     while True:
-        proc = run_fish(sock.getsockname()[1], os.getcwd())
-        rtn = proc.returncode
-
-        # TODO case where fish was not killed by mollusk
-        # for example, when EOF is passed to fish.
-
-        # prepare for upcoming command
-        if listen_for_cmd(sock):
+        if listen_for_cmd(sock, fish.pid):
+            print(f"killing fish")
+            os.kill(fish.pid, signal.SIGTERM)
             return
 
 def relay_mode(cmd, port):
-    sock = socket.socket()
-    sock.connect(('', int(port)))
-    sock.send(pickle.dumps((os.getcwd(), cmd)))
-    sock.close()
+    try:
+        print('starting relay')
+        sock = socket.socket()
+        sock.connect(('', int(port)))
+        sock.send(pickle.dumps((os.getcwd(), cmd)))
+        sock.close()
+
+    except Exception as e:
+        print(e)
 
 def main():
+    global relay
     args = parse_args()
     if args.relay:
+        relay = "RELAY"
         relay_mode(*args.relay)
     else:
         shell_mode()
